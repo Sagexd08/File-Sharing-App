@@ -18,28 +18,24 @@ class FileShareApp:
         self.root.title("Enhanced File Sharing App")
         self.root.geometry("600x800")
         
-        # Network settings
+      
         self.HOST = socket.gethostbyname(socket.gethostname())
         self.PORT = 5000
         self.BUFFER_SIZE = 8192
         
-        # Encryption setup
+
         self.key = Fernet.generate_key()
         self.cipher_suite = Fernet(self.key)
-        
-        # Transfer history
         self.transfer_history = []
-        
-        # Allowed file types (empty means all allowed)
+
         self.allowed_extensions = set()
-        
-        # Setup logging
+   
         self.setup_logging()
         
-        # Create GUI elements
+      
         self.create_widgets()
         
-        # Start server thread
+  
         self.server_thread = threading.Thread(target=self.start_server, daemon=True)
         self.server_thread.start()
     
@@ -53,19 +49,18 @@ class FileShareApp:
         )
 
     def create_widgets(self):
-        # Main container
+      
         main_container = ttk.Notebook(self.root)
         main_container.pack(expand=True, fill="both", padx=10, pady=5)
         
-        # Transfer tab
+   
         transfer_frame = ttk.Frame(main_container)
         main_container.add(transfer_frame, text="Transfer")
         
-        # Settings tab
+
         settings_frame = ttk.Frame(main_container)
         main_container.add(settings_frame, text="Settings")
-        
-        # History tab
+       
         history_frame = ttk.Frame(main_container)
         main_container.add(history_frame, text="History")
         
@@ -74,12 +69,11 @@ class FileShareApp:
         self.create_history_widgets(history_frame)
 
     def create_transfer_widgets(self, parent):
-        # IP Address display
+      
         ip_frame = ttk.LabelFrame(parent, text="Network Information")
         ip_frame.pack(pady=10, fill="x")
         ttk.Label(ip_frame, text=f"Your IP Address: {self.HOST}").pack(pady=5)
-        
-        # Send file section
+
         send_frame = ttk.LabelFrame(parent, text="Send File")
         send_frame.pack(pady=10, fill="x")
         
@@ -94,8 +88,7 @@ class FileShareApp:
         btn_frame.pack(fill="x", pady=5)
         ttk.Button(btn_frame, text="Choose Files", command=self.choose_files).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Send Files", command=self.send_files).pack(side=tk.LEFT, padx=5)
-        
-        # Progress section
+      
         progress_frame = ttk.LabelFrame(parent, text="Transfer Progress")
         progress_frame.pack(pady=10, fill="x")
         
@@ -109,8 +102,7 @@ class FileShareApp:
         
         self.status_label = ttk.Label(progress_frame, text="Ready")
         self.status_label.pack(pady=5)
-        
-        # Status section
+       
         status_frame = ttk.LabelFrame(parent, text="Status Log")
         status_frame.pack(pady=10, fill="both", expand=True)
         
@@ -122,7 +114,7 @@ class FileShareApp:
         self.status_text.config(yscrollcommand=scrollbar.set)
 
     def create_settings_widgets(self, parent):
-        # File type settings
+       
         type_frame = ttk.LabelFrame(parent, text="Allowed File Types")
         type_frame.pack(pady=10, fill="x")
         
@@ -138,7 +130,7 @@ class FileShareApp:
         self.file_types_entry.pack(pady=5, fill="x")
         ttk.Label(type_frame, text="Enter extensions separated by comma (e.g., .pdf,.txt,.png)").pack()
         
-        # Security settings
+        
         security_frame = ttk.LabelFrame(parent, text="Security Settings")
         security_frame.pack(pady=10, fill="x")
         
@@ -146,7 +138,6 @@ class FileShareApp:
         ttk.Checkbutton(security_frame, text="Enable encryption", 
                        variable=self.encryption_var).pack(pady=5)
         
-        # Download location
         download_frame = ttk.LabelFrame(parent, text="Download Location")
         download_frame.pack(pady=10, fill="x")
         
@@ -234,20 +225,19 @@ class FileShareApp:
                 
                 file_path = Path(filename)
                 file_size = file_path.stat().st_size
-                
-                # Prepare metadata
+
                 metadata = {
                     "filename": file_path.name,
                     "size": file_size,
                     "encrypted": self.encryption_var.get()
                 }
                 
-                # Send metadata
+         
                 s.send(json.dumps(metadata).encode())
                 if s.recv(1024).decode() != "OK":
                     raise Exception("Connection failed")
                 
-                # Send file content
+              
                 sent_bytes = 0
                 with open(filename, 'rb') as f:
                     while True:
@@ -290,25 +280,24 @@ class FileShareApp:
 
     def handle_client(self, conn, addr):
         try:
-            # Receive metadata
+            
             metadata = json.loads(conn.recv(1024).decode())
             filename = metadata["filename"]
             file_size = metadata["size"]
             encrypted = metadata.get("encrypted", False)
             
-            # Send acknowledgment
+          
             conn.send("OK".encode())
             
             if not self.check_file_type(filename):
                 raise Exception("File type not allowed")
             
-            # Create download directory if it doesn't exist
             download_dir = Path(self.download_path.get())
             download_dir.mkdir(parents=True, exist_ok=True)
             
             file_path = download_dir / filename
             
-            # Receive and save file
+            
             received_bytes = 0
             with open(file_path, 'wb') as f:
                 while received_bytes < file_size:
